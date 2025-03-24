@@ -16,6 +16,8 @@ exports.DataCollectionService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const cacheService_1 = require("./cacheService");
 const errorHandler_1 = require("../error/errorHandler");
+const dotenv_1 = require("dotenv");
+(0, dotenv_1.configDotenv)();
 class DataCollectionService {
     constructor() {
         this.apiKey = process.env.ODDS_API_KEY;
