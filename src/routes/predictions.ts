@@ -3,6 +3,8 @@ import { DataCollectionService } from "../services/dataCollection";
 import { PredictionEngine} from "../services/predictionEngine";
 import { Prediction} from "../services/database";
 import { getCachedData, setCachedData } from '../services/cacheService';
+import catchAsync from '../utils/catchAsync';
+import { AppError } from '../error/errorHandler';
 
 const router = express.Router();
 
@@ -10,8 +12,7 @@ const dataCollectionService = new DataCollectionService();
 const predictionEngine = new PredictionEngine();
 
 
-router.get('/:sport', async (req: Request, res: Response) : Promise<any> => {
-    try{
+router.get('/:sport', catchAsync( async (req: Request, res: Response) : Promise<any> => {
         const sport = req.params.sport;
         const cacheKey =  `prediction:${sport}`;
 
@@ -24,6 +25,9 @@ router.get('/:sport', async (req: Request, res: Response) : Promise<any> => {
         }
 
         const events = await dataCollectionService.getSportsData(sport);
+        if (events.length === 0) {
+          throw new AppError(`No events found for ${sport}`, 404);
+        }
     
         if (events.length === 0) {
             return res.status(404).json({ message: `No events found for ${sport}` });
@@ -42,10 +46,7 @@ router.get('/:sport', async (req: Request, res: Response) : Promise<any> => {
         fromCache: false,
         data: predictions
         });
-        } catch (error) {
-          console.error('Error generating predictions:', error);
-          return res.status(500).json({ message: 'Failed to generate predictions' });
-    }
-})
+        
+}));
 
 export default router;

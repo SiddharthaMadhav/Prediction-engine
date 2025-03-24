@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DataCollectionService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const cacheService_1 = require("./cacheService");
+const errorHandler_1 = require("../error/errorHandler");
 class DataCollectionService {
     constructor() {
         this.apiKey = process.env.ODDS_API_KEY;
@@ -43,7 +44,7 @@ class DataCollectionService {
             }
             catch (error) {
                 console.error(`Error fetching ${sport} data:`, error);
-                throw new Error(`Failed to fetch sports data for ${sport}`);
+                throw new errorHandler_1.AppError(`Failed to fetch sports data for ${sport}`, 500);
             }
         });
     }

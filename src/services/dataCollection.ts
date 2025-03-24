@@ -1,5 +1,9 @@
 import axios from 'axios';
 import {getCachedData, setCachedData} from './cacheService';
+import { AppError } from '../error/errorHandler';
+import { configDotenv } from 'dotenv';
+
+configDotenv()
 
 export class DataCollectionService{
     private apiKey: string | undefined;
@@ -37,7 +41,7 @@ export class DataCollectionService{
         return response.data;
         } catch (error) {
             console.error(`Error fetching ${sport} data:`, error);
-            throw new Error(`Failed to fetch sports data for ${sport}`);
+            throw new AppError(`Failed to fetch sports data for ${sport}`, 500);
         }
     }
 }

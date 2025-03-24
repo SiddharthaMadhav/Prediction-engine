@@ -17,38 +17,37 @@ const dataCollection_1 = require("../services/dataCollection");
 const predictionEngine_1 = require("../services/predictionEngine");
 const database_1 = require("../services/database");
 const cacheService_1 = require("../services/cacheService");
+const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
+const errorHandler_1 = require("../error/errorHandler");
 const router = express_1.default.Router();
 const dataCollectionService = new dataCollection_1.DataCollectionService();
 const predictionEngine = new predictionEngine_1.PredictionEngine();
-router.get('/:sport', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const sport = req.params.sport;
-        const cacheKey = `prediction:${sport}`;
-        const cachedData = yield (0, cacheService_1.getCachedData)(cacheKey);
-        if (cachedData) {
-            return res.status(200).json({
-                fromCache: true,
-                data: JSON.parse(cachedData)
-            });
-        }
-        const events = yield dataCollectionService.getSportsData(sport);
-        if (events.length === 0) {
-            return res.status(404).json({ message: `No events found for ${sport}` });
-        }
-        const predictions = yield predictionEngine.generatePrediction(events);
-        yield Promise.all(predictions.map((prediction) => __awaiter(void 0, void 0, void 0, function* () {
-            const newPrediction = new database_1.Prediction(prediction);
-            yield newPrediction.save();
-        })));
-        yield (0, cacheService_1.setCachedData)(cacheKey, JSON.stringify(predictions), 1800);
+router.get('/:sport', (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const sport = req.params.sport;
+    const cacheKey = `prediction:${sport}`;
+    const cachedData = yield (0, cacheService_1.getCachedData)(cacheKey);
+    if (cachedData) {
         return res.status(200).json({
-            fromCache: false,
-            data: predictions
+            fromCache: true,
+            data: JSON.parse(cachedData)
         });
     }
-    catch (error) {
-        console.error('Error generating predictions:', error);
-        return res.status(500).json({ message: 'Failed to generate predictions' });
+    const events = yield dataCollectionService.getSportsData(sport);
+    if (events.length === 0) {
+        throw new errorHandler_1.AppError(`No events found for ${sport}`, 404);
     }
-}));
+    if (events.length === 0) {
+        return res.status(404).json({ message: `No events found for ${sport}` });
+    }
+    const predictions = yield predictionEngine.generatePrediction(events);
+    yield Promise.all(predictions.map((prediction) => __awaiter(void 0, void 0, void 0, function* () {
+        const newPrediction = new database_1.Prediction(prediction);
+        yield newPrediction.save();
+    })));
+    yield (0, cacheService_1.setCachedData)(cacheKey, JSON.stringify(predictions), 1800);
+    return res.status(200).json({
+        fromCache: false,
+        data: predictions
+    });
+})));
 exports.default = router;
